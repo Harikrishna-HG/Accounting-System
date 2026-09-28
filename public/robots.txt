@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /language/*
+Allow: /
+
+Sitemap: https://sankalpkhabar.com/sitemap.xml
