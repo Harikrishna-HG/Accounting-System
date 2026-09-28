@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounting;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -12,6 +13,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::orderBy('name')->paginate(10);
+
         return view('accounting.products.index', compact('products'));
     }
 
@@ -35,9 +37,11 @@ class ProductController extends Controller
         ]);
 
         $validated['is_active'] = $request->has('is_active');
-        $validated['slug'] = Str::slug($validated['name']) . '-' . uniqid();
+        $validated['slug'] = Str::slug($validated['name']).'-'.uniqid();
 
-        Product::create($validated);
+        DB::transaction(function () use ($validated) {
+            Product::create($validated);
+        });
 
         return redirect()->route('accounting.products.index')
             ->with('success', 'Product added successfully.');
@@ -62,14 +66,16 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'nullable|integer|min:0',
-            'sku' => 'nullable|string|max:100|unique:products,sku,' . $product->id,
+            'sku' => 'nullable|string|max:100|unique:products,sku,'.$product->id,
             'image_url' => 'nullable|url|max:500',
             'source_url' => 'nullable|url|max:500',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
 
-        $product->update($validated);
+        DB::transaction(function () use ($product, $validated) {
+            $product->update($validated);
+        });
 
         return redirect()->route('accounting.products.index')
             ->with('success', 'Product updated successfully.');
@@ -77,7 +83,10 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        $product->delete();
+        DB::transaction(function () use ($product) {
+            $product->delete();
+        });
+
         return redirect()->route('accounting.products.index')
             ->with('success', 'Product deleted successfully.');
     }

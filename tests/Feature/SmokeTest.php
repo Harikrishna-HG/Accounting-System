@@ -1,7 +1,26 @@
 <?php
 
-test('root redirects to the accounting dashboard', function () {
-    $this->get('/')->assertRedirect('/accounting/dashboard');
+use App\Models\Role;
+use App\Models\User;
+use Database\Seeders\RoleAndPermissionSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+test('root sends a guest straight to login', function () {
+    // The root path is gated on dashboard.view, so a guest no longer takes a
+    // two-hop redirect through the dashboard.
+    $this->get('/')->assertRedirect('/login');
+});
+
+test('root sends a permitted user to the accounting dashboard', function () {
+    (new RoleAndPermissionSeeder)->run();
+
+    $user = User::factory()->create([
+        'role_id' => Role::where('slug', 'accountant')->firstOrFail()->id,
+    ]);
+
+    $this->actingAs($user)->get('/')->assertRedirect('/accounting/dashboard');
 });
 
 test('login page is reachable', function () {

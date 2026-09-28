@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Accounting;
 use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
     public function index()
     {
         $suppliers = Supplier::orderBy('name')->paginate(10);
+
         return view('accounting.suppliers.index', compact('suppliers'));
     }
 
@@ -32,7 +34,9 @@ class SupplierController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
 
-        Supplier::create($validated);
+        DB::transaction(function () use ($validated) {
+            Supplier::create($validated);
+        });
 
         return redirect()->route('accounting.suppliers.index')
             ->with('success', 'Supplier added successfully.');
@@ -42,6 +46,7 @@ class SupplierController extends Controller
     {
         $purchaseOrders = $supplier->purchaseOrders()->latest()->paginate(10, ['*'], 'po_page');
         $expenses = $supplier->expenses()->latest()->paginate(10, ['*'], 'exp_page');
+
         return view('accounting.suppliers.show', compact('supplier', 'purchaseOrders', 'expenses'));
     }
 
@@ -63,7 +68,9 @@ class SupplierController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
 
-        $supplier->update($validated);
+        DB::transaction(function () use ($supplier, $validated) {
+            $supplier->update($validated);
+        });
 
         return redirect()->route('accounting.suppliers.index')
             ->with('success', 'Supplier updated successfully.');
@@ -71,7 +78,10 @@ class SupplierController extends Controller
 
     public function destroy(Supplier $supplier)
     {
-        $supplier->delete();
+        DB::transaction(function () use ($supplier) {
+            $supplier->delete();
+        });
+
         return redirect()->route('accounting.suppliers.index')
             ->with('success', 'Supplier deleted successfully.');
     }

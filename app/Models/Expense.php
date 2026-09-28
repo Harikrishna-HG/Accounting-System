@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expense extends Model
 {
+    use Auditable, SoftDeletes;
+
     protected $fillable = [
         'expense_number', 'category', 'description', 'amount', 'expense_date',
         'payment_method', 'reference', 'supplier_id', 'receipt', 'notes',
@@ -26,11 +30,12 @@ class Expense extends Model
 
     public static function generateExpenseNumber()
     {
-        $prefix = 'EXP-' . date('Ymd');
-        $last = self::where('expense_number', 'like', $prefix . '%')
+        $prefix = 'EXP-'.date('Ymd');
+        $last = self::where('expense_number', 'like', $prefix.'%')
             ->orderBy('id', 'desc')
             ->first();
         $num = $last ? intval(substr($last->expense_number, -4)) + 1 : 1;
-        return $prefix . '-' . str_pad($num, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.str_pad($num, 4, '0', STR_PAD_LEFT);
     }
 }

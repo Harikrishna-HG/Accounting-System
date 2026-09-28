@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
+    use Auditable, SoftDeletes;
+
     protected $fillable = [
         'payment_number', 'invoice_id', 'client_id', 'supplier_id', 'type',
         'amount', 'payment_method', 'reference', 'payment_date', 'notes',
@@ -36,11 +40,12 @@ class Payment extends Model
 
     public static function generatePaymentNumber()
     {
-        $prefix = 'PAY-' . date('Ymd');
-        $last = self::where('payment_number', 'like', $prefix . '%')
+        $prefix = 'PAY-'.date('Ymd');
+        $last = self::where('payment_number', 'like', $prefix.'%')
             ->orderBy('id', 'desc')
             ->first();
         $num = $last ? intval(substr($last->payment_number, -4)) + 1 : 1;
-        return $prefix . '-' . str_pad($num, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.str_pad($num, 4, '0', STR_PAD_LEFT);
     }
 }

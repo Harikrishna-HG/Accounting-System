@@ -24,18 +24,23 @@
 
     <nav class="sidebar-nav">
         <ul class="sidebar-menu">
+            @if(auth()->user()->hasPermission('dashboard.view'))
             <li class="menu-item">
                 <a href="{{ route('dashboard') }}" class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-chart-pie"></i></span>
                     <span class="menu-text">Dashboard</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('dashboard.view'))
             <li class="menu-item" style="border-top:1px solid rgba(255,255,255,0.15);padding-top:8px;margin-top:8px;">
                 <a href="{{ route('accounting.dashboard') }}" class="menu-link {{ request()->routeIs('accounting.dashboard') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-calculator"></i></span>
                     <span class="menu-text" style="font-weight:700;">Accounting</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('products.manage'))
             <li class="menu-item">
                 <a href="{{ route('accounting.products.index') }}" class="menu-link {{ request()->routeIs('accounting.products.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-boxes"></i></span>
@@ -43,54 +48,79 @@
                     <span class="menu-badge">{{ $productCount }}</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('clients.manage'))
             <li class="menu-item">
                 <a href="{{ route('accounting.clients.index') }}" class="menu-link {{ request()->routeIs('accounting.clients.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-users"></i></span>
                     <span class="menu-text">Clients</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('suppliers.manage'))
             <li class="menu-item">
                 <a href="{{ route('accounting.suppliers.index') }}" class="menu-link {{ request()->routeIs('accounting.suppliers.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-truck"></i></span>
                     <span class="menu-text">Suppliers</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('invoices.manage'))
             <li class="menu-item">
                 <a href="{{ route('accounting.invoices.index') }}" class="menu-link {{ request()->routeIs('accounting.invoices.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-file-invoice"></i></span>
                     <span class="menu-text">Invoices</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('payments.manage'))
             <li class="menu-item">
                 <a href="{{ route('accounting.payments.index') }}" class="menu-link {{ request()->routeIs('accounting.payments.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-credit-card"></i></span>
                     <span class="menu-text">Payments</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('expenses.manage'))
             <li class="menu-item">
                 <a href="{{ route('accounting.expenses.index') }}" class="menu-link {{ request()->routeIs('accounting.expenses.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-shopping-cart"></i></span>
                     <span class="menu-text">Expenses</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('purchase-orders.manage'))
             <li class="menu-item">
                 <a href="{{ route('accounting.purchase-orders.index') }}" class="menu-link {{ request()->routeIs('accounting.purchase-orders.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
                     <span class="menu-text">Purchase Orders</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('reports.view'))
             <li class="menu-item">
                 <a href="{{ route('accounting.transactions.index') }}" class="menu-link {{ request()->routeIs('accounting.transactions.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-book"></i></span>
                     <span class="menu-text">Ledger</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('reports.view'))
             <li class="menu-item">
                 <a href="{{ route('accounting.reports.index') }}" class="menu-link {{ request()->routeIs('accounting.reports.*') ? 'active' : '' }}">
                     <span class="menu-icon"><i class="fas fa-chart-bar"></i></span>
                     <span class="menu-text">Reports</span>
                 </a>
             </li>
+            @endif
+            @if(auth()->user()->hasPermission('audit.view'))
+            <li class="menu-item">
+                <a href="{{ route('accounting.audit-logs.index') }}" class="menu-link {{ request()->routeIs('accounting.audit-logs.*') ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="fas fa-clock-rotate-left"></i></span>
+                    <span class="menu-text">Audit Log</span>
+                </a>
+            </li>
+            @endif
             @if(auth()->user()->hasPermission('users.manage'))
             <li class="menu-item">
                 <a href="{{ route('dashboard.users.index') }}" class="menu-link {{ request()->routeIs('dashboard.users.*') ? 'active' : '' }}">

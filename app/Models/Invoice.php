@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
+    use Auditable, SoftDeletes;
+
     protected $fillable = [
         'invoice_number', 'client_id', 'client_name', 'client_phone', 'client_address',
         'client_pan', 'invoice_date', 'due_date', 'subtotal', 'discount', 'tax',
@@ -53,11 +57,12 @@ class Invoice extends Model
 
     public static function generateInvoiceNumber()
     {
-        $prefix = 'INV-' . date('Ymd');
-        $last = self::where('invoice_number', 'like', $prefix . '%')
+        $prefix = 'INV-'.date('Ymd');
+        $last = self::where('invoice_number', 'like', $prefix.'%')
             ->orderBy('id', 'desc')
             ->first();
         $num = $last ? intval(substr($last->invoice_number, -4)) + 1 : 1;
-        return $prefix . '-' . str_pad($num, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.str_pad($num, 4, '0', STR_PAD_LEFT);
     }
 }

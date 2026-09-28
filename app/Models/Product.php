@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
+    use Auditable, SoftDeletes;
+
     protected $fillable = [
         'name', 'slug', 'category', 'description', 'price', 'cost_price',
         'stock_quantity', 'sku', 'image_url', 'source_url', 'source', 'is_active',

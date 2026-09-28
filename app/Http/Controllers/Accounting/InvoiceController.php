@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Accounting;
 
 use App\Http\Controllers\Controller;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Models\Client;
+use App\Models\Invoice;
 use App\Models\Product;
-use App\Models\Payment;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
 {
@@ -23,10 +23,11 @@ class InvoiceController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('invoice_number', 'like', "%{$s}%")
-                  ->orWhere('client_name', 'like', "%{$s}%");
+                    ->orWhere('client_name', 'like', "%{$s}%");
             });
         }
         $invoices = $query->latest()->paginate(10);
+
         return view('accounting.invoices.index', compact('invoices'));
     }
 
@@ -34,6 +35,7 @@ class InvoiceController extends Controller
     {
         $clients = Client::active()->orderBy('name')->get();
         $products = Product::active()->orderBy('name')->get();
+
         return view('accounting.invoices.create', compact('clients', 'products'));
     }
 
@@ -84,51 +86,56 @@ class InvoiceController extends Controller
         }
         $total = $taxable + $tax;
 
-        $invoice = Invoice::create([
-            'invoice_number' => $invoiceNumber,
-            'client_id' => $validated['client_id'] ?? null,
-            'client_name' => $validated['client_name'],
-            'client_phone' => $validated['client_phone'] ?? null,
-            'client_address' => $validated['client_address'] ?? null,
-            'client_pan' => $validated['client_pan'] ?? null,
-            'invoice_date' => $validated['invoice_date'],
-            'due_date' => $validated['due_date'],
-            'subtotal' => $subtotal,
-            'discount' => $discount,
-            'tax' => $tax,
-            'tax_type' => $validated['tax_type'] ?? 'none',
-            'total' => $total,
-            'paid_amount' => 0,
-            'due_amount' => $total,
-            'status' => 'unpaid',
-            'notes' => $validated['notes'] ?? null,
-            'payment_method' => $validated['payment_method'] ?? null,
-        ]);
+        DB::transaction(function () use ($validated, $invoiceNumber, $subtotal, $itemsData, $discount, $tax, $total) {
+            $invoice = Invoice::create([
+                'invoice_number' => $invoiceNumber,
+                'client_id' => $validated['client_id'] ?? null,
+                'client_name' => $validated['client_name'],
+                'client_phone' => $validated['client_phone'] ?? null,
+                'client_address' => $validated['client_address'] ?? null,
+                'client_pan' => $validated['client_pan'] ?? null,
+                'invoice_date' => $validated['invoice_date'],
+                'due_date' => $validated['due_date'] ?? null,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'tax' => $tax,
+                'tax_type' => $validated['tax_type'] ?? 'none',
+                'total' => $total,
+                'paid_amount' => 0,
+                'due_amount' => $total,
+                'status' => 'unpaid',
+                'notes' => $validated['notes'] ?? null,
+                'payment_method' => $validated['payment_method'] ?? null,
+            ]);
 
-        foreach ($itemsData as $item) {
-            $invoice->items()->create($item);
-        }
-
-        if ($validated['client_id']) {
-            $client = Client::find($validated['client_id']);
-            if ($client) {
-                $client->increment('total_purchases', $total);
-                $client->increment('balance', $total);
+            foreach ($itemsData as $item) {
+                $invoice->items()->create($item);
             }
-        }
 
-        Transaction::create([
-            'transaction_number' => Transaction::generateTransactionNumber(),
-            'type' => 'invoice',
-            'category' => 'sales',
-            'description' => "Invoice {$invoiceNumber} - {$validated['client_name']}",
-            'debit' => 0,
-            'credit' => $total,
-            'balance' => $total,
-            'transaction_date' => $validated['invoice_date'],
-            'reference_type' => Invoice::class,
-            'reference_id' => $invoice->id,
-        ]);
+            $clientId = $validated['client_id'] ?? null;
+
+            if ($clientId) {
+                $client = Client::find($clientId);
+                if ($client) {
+                    $client->increment('total_purchases', $total);
+                    $client->increment('balance', $total);
+                }
+            }
+
+            Transaction::create([
+                'transaction_number' => Transaction::generateTransactionNumber(),
+                'user_id' => Auth::id(),
+                'type' => 'invoice',
+                'category' => 'sales',
+                'description' => "Invoice {$invoiceNumber} - {$validated['client_name']}",
+                'debit' => 0,
+                'credit' => $total,
+                'balance' => $total,
+                'transaction_date' => $validated['invoice_date'],
+                'reference_type' => Invoice::class,
+                'reference_id' => $invoice->id,
+            ]);
+        });
 
         return redirect()->route('accounting.invoices.index')
             ->with('success', "Invoice {$invoiceNumber} created successfully.");
@@ -137,6 +144,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         $invoice->load('items', 'payments');
+
         return view('accounting.invoices.show', compact('invoice'));
     }
 
@@ -145,6 +153,7 @@ class InvoiceController extends Controller
         $clients = Client::active()->orderBy('name')->get();
         $products = Product::active()->orderBy('name')->get();
         $invoice->load('items');
+
         return view('accounting.invoices.edit', compact('invoice', 'clients', 'products'));
     }
 
@@ -194,68 +203,75 @@ class InvoiceController extends Controller
         $dueAmount = max(0, $total - $paidAmount);
 
         $newStatus = $validated['status'] ?? null;
-        if (!$newStatus || $newStatus === 'unpaid') {
+        if (! $newStatus || $newStatus === 'unpaid') {
             $newStatus = $paidAmount >= $total ? 'paid' : ($paidAmount > 0 ? 'partial' : 'unpaid');
-            if ($paidAmount <= 0) $newStatus = 'unpaid';
-        }
-
-        $invoice->update([
-            'client_id' => $validated['client_id'] ?? null,
-            'client_name' => $validated['client_name'],
-            'client_phone' => $validated['client_phone'] ?? null,
-            'client_address' => $validated['client_address'] ?? null,
-            'client_pan' => $validated['client_pan'] ?? null,
-            'invoice_date' => $validated['invoice_date'],
-            'due_date' => $validated['due_date'],
-            'subtotal' => $subtotal,
-            'discount' => $discount,
-            'tax' => $tax,
-            'tax_type' => $validated['tax_type'] ?? 'none',
-            'total' => $total,
-            'due_amount' => $dueAmount,
-            'status' => $newStatus,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        $invoice->items()->delete();
-        foreach ($itemsData as $item) {
-            $invoice->items()->create([
-                'product_id' => $item['product_id'] ?? null,
-                'product_name' => $item['product_name'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'total' => $item['total'],
-            ]);
-        }
-
-        // Adjust client balances on client_id reassignment
-        if ((int)$oldClientId !== (int)($validated['client_id'] ?? 0) && $oldClientId) {
-            $oldClient = Client::find($oldClientId);
-            if ($oldClient) {
-                $oldClient->decrement('total_purchases', $oldTotal);
-                $oldClient->decrement('balance', $oldTotal);
+            if ($paidAmount <= 0) {
+                $newStatus = 'unpaid';
             }
         }
-        if ($validated['client_id']) {
-            $newClient = Client::find($validated['client_id']);
-            if ($newClient) {
-                $diffTotal = $total - ((int)$oldClientId === (int)$validated['client_id'] ? $oldTotal : 0);
-                if ($diffTotal != 0) {
-                    $newClient->increment('total_purchases', $diffTotal);
-                    $newClient->increment('balance', $diffTotal);
+
+        DB::transaction(function () use ($validated, $invoice, $subtotal, $itemsData, $discount, $tax, $total, $dueAmount, $newStatus, $oldTotal, $oldClientId) {
+            $invoice->update([
+                'client_id' => $validated['client_id'] ?? null,
+                'client_name' => $validated['client_name'],
+                'client_phone' => $validated['client_phone'] ?? null,
+                'client_address' => $validated['client_address'] ?? null,
+                'client_pan' => $validated['client_pan'] ?? null,
+                'invoice_date' => $validated['invoice_date'],
+                'due_date' => $validated['due_date'] ?? null,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'tax' => $tax,
+                'tax_type' => $validated['tax_type'] ?? 'none',
+                'total' => $total,
+                'due_amount' => $dueAmount,
+                'status' => $newStatus,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $invoice->items()->delete();
+            foreach ($itemsData as $item) {
+                $invoice->items()->create([
+                    'product_id' => $item['product_id'] ?? null,
+                    'product_name' => $item['product_name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['total'],
+                ]);
+            }
+
+            // Adjust client balances on client_id reassignment
+            if ((int) $oldClientId !== (int) ($validated['client_id'] ?? 0) && $oldClientId) {
+                $oldClient = Client::find($oldClientId);
+                if ($oldClient) {
+                    $oldClient->decrement('total_purchases', $oldTotal);
+                    $oldClient->decrement('balance', $oldTotal);
                 }
             }
-        }
+            $newClientId = $validated['client_id'] ?? null;
 
-        // Sync transaction
-        Transaction::where('reference_type', Invoice::class)
-            ->where('reference_id', $invoice->id)
-            ->update([
-                'credit' => $total,
-                'balance' => $total,
-                'description' => "Invoice {$invoice->invoice_number} - {$validated['client_name']}",
-                'transaction_date' => $validated['invoice_date'],
-            ]);
+            if ($newClientId) {
+                $newClient = Client::find($newClientId);
+                if ($newClient) {
+                    $diffTotal = $total - ((int) $oldClientId === (int) $newClientId ? $oldTotal : 0);
+                    if ($diffTotal != 0) {
+                        $newClient->increment('total_purchases', $diffTotal);
+                        $newClient->increment('balance', $diffTotal);
+                    }
+                }
+            }
+
+            // Sync the linked ledger row model-by-model so the audit hook sees it.
+            Transaction::where('reference_type', Invoice::class)
+                ->where('reference_id', $invoice->id)
+                ->get()
+                ->each(fn (Transaction $transaction) => $transaction->update([
+                    'credit' => $total,
+                    'balance' => $total,
+                    'description' => "Invoice {$invoice->invoice_number} - {$validated['client_name']}",
+                    'transaction_date' => $validated['invoice_date'],
+                ]));
+        });
 
         return redirect()->route('accounting.invoices.index')
             ->with('success', 'Invoice updated successfully.');
@@ -263,26 +279,30 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
-        $clientId = $invoice->client_id;
-        $total = $invoice->total;
+        DB::transaction(function () use ($invoice) {
+            $clientId = $invoice->client_id;
+            $total = $invoice->total;
 
-        $invoice->items()->delete();
+            $invoice->items()->delete();
 
-        // Reverse client balance
-        if ($clientId) {
-            $client = Client::find($clientId);
-            if ($client) {
-                $client->decrement('total_purchases', $total);
-                $client->decrement('balance', $total);
+            // Reverse client balance
+            if ($clientId) {
+                $client = Client::find($clientId);
+                if ($client) {
+                    $client->decrement('total_purchases', $total);
+                    $client->decrement('balance', $total);
+                }
             }
-        }
 
-        // Cleanup transaction
-        Transaction::where('reference_type', Invoice::class)
-            ->where('reference_id', $invoice->id)
-            ->delete();
+            // Soft-delete the linked ledger row so the deletion itself is auditable
+            // and no posted entry is ever physically removed.
+            Transaction::where('reference_type', Invoice::class)
+                ->where('reference_id', $invoice->id)
+                ->get()
+                ->each(fn (Transaction $transaction) => $transaction->delete());
 
-        $invoice->delete();
+            $invoice->delete();
+        });
 
         return redirect()->route('accounting.invoices.index')
             ->with('success', 'Invoice deleted successfully.');
@@ -291,6 +311,7 @@ class InvoiceController extends Controller
     public function print(Invoice $invoice)
     {
         $invoice->load('items');
+
         return view('accounting.invoices.print', compact('invoice'));
     }
 }

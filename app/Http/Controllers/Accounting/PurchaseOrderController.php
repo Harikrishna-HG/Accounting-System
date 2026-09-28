@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Accounting;
 
 use App\Http\Controllers\Controller;
-use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderItem;
-use App\Models\Supplier;
 use App\Models\Product;
+use App\Models\PurchaseOrder;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderController extends Controller
 {
@@ -18,6 +18,7 @@ class PurchaseOrderController extends Controller
             $query->where('status', $request->status);
         }
         $orders = $query->latest()->paginate(10);
+
         return view('accounting.purchase_orders.index', compact('orders'));
     }
 
@@ -25,12 +26,14 @@ class PurchaseOrderController extends Controller
     {
         $suppliers = Supplier::active()->orderBy('name')->get();
         $products = Product::active()->orderBy('name')->get();
+
         return view('accounting.purchase_orders.create', compact('suppliers', 'products'));
     }
 
     public function show(PurchaseOrder $purchaseOrder)
     {
         $purchaseOrder->load('items', 'supplier');
+
         return view('accounting.purchase_orders.show', compact('purchaseOrder'));
     }
 
@@ -58,27 +61,29 @@ class PurchaseOrderController extends Controller
             $itemsData[] = $item + ['total' => $total];
         }
 
-        $order = PurchaseOrder::create([
-            'order_number' => $orderNumber,
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'supplier_name' => $validated['supplier_name'],
-            'order_date' => $validated['order_date'],
-            'expected_date' => $validated['expected_date'] ?? null,
-            'subtotal' => $subtotal,
-            'total' => $subtotal,
-            'status' => 'pending',
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        foreach ($itemsData as $item) {
-            $order->items()->create([
-                'product_id' => $item['product_id'] ?? null,
-                'product_name' => $item['product_name'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'total' => $item['total'],
+        DB::transaction(function () use ($validated, $subtotal, $itemsData, $orderNumber) {
+            $order = PurchaseOrder::create([
+                'order_number' => $orderNumber,
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'supplier_name' => $validated['supplier_name'],
+                'order_date' => $validated['order_date'],
+                'expected_date' => $validated['expected_date'] ?? null,
+                'subtotal' => $subtotal,
+                'total' => $subtotal,
+                'status' => 'pending',
+                'notes' => $validated['notes'] ?? null,
             ]);
-        }
+
+            foreach ($itemsData as $item) {
+                $order->items()->create([
+                    'product_id' => $item['product_id'] ?? null,
+                    'product_name' => $item['product_name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['total'],
+                ]);
+            }
+        });
 
         return redirect()->route('accounting.purchase-orders.index')
             ->with('success', "Purchase Order {$orderNumber} created successfully.");
@@ -89,6 +94,7 @@ class PurchaseOrderController extends Controller
         $suppliers = Supplier::active()->orderBy('name')->get();
         $products = Product::active()->orderBy('name')->get();
         $purchaseOrder->load('items');
+
         return view('accounting.purchase_orders.edit', compact('purchaseOrder', 'suppliers', 'products'));
     }
 
@@ -116,27 +122,29 @@ class PurchaseOrderController extends Controller
             $itemsData[] = $item + ['total' => $total];
         }
 
-        $purchaseOrder->update([
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'supplier_name' => $validated['supplier_name'],
-            'order_date' => $validated['order_date'],
-            'expected_date' => $validated['expected_date'] ?? null,
-            'subtotal' => $subtotal,
-            'total' => $subtotal,
-            'status' => $validated['status'] ?? $purchaseOrder->status,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        $purchaseOrder->items()->delete();
-        foreach ($itemsData as $item) {
-            $purchaseOrder->items()->create([
-                'product_id' => $item['product_id'] ?? null,
-                'product_name' => $item['product_name'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'total' => $item['total'],
+        DB::transaction(function () use ($validated, $subtotal, $itemsData, $purchaseOrder) {
+            $purchaseOrder->update([
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'supplier_name' => $validated['supplier_name'],
+                'order_date' => $validated['order_date'],
+                'expected_date' => $validated['expected_date'] ?? null,
+                'subtotal' => $subtotal,
+                'total' => $subtotal,
+                'status' => $validated['status'] ?? $purchaseOrder->status,
+                'notes' => $validated['notes'] ?? null,
             ]);
-        }
+
+            $purchaseOrder->items()->delete();
+            foreach ($itemsData as $item) {
+                $purchaseOrder->items()->create([
+                    'product_id' => $item['product_id'] ?? null,
+                    'product_name' => $item['product_name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['total'],
+                ]);
+            }
+        });
 
         return redirect()->route('accounting.purchase-orders.index')
             ->with('success', 'Purchase Order updated successfully.');
@@ -144,8 +152,11 @@ class PurchaseOrderController extends Controller
 
     public function destroy(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->items()->delete();
-        $purchaseOrder->delete();
+        DB::transaction(function () use ($purchaseOrder) {
+            $purchaseOrder->items()->delete();
+            $purchaseOrder->delete();
+        });
+
         return redirect()->route('accounting.purchase-orders.index')
             ->with('success', 'Purchase Order deleted successfully.');
     }

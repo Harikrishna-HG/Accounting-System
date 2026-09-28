@@ -28,6 +28,7 @@ class RoleAndPermissionSeeder extends Seeder
         $this->purgeLegacyNewsRecords();
 
         $permissions = [
+            ['name' => 'ड्यासबोर्ड हेर्ने', 'slug' => 'dashboard.view', 'description' => 'ड्यासबोर्ड खोल्न सक्ने'],
             ['name' => 'उत्पादन व्यवस्थापन', 'slug' => 'products.manage', 'description' => 'उत्पादनहरू व्यवस्थापन गर्न सक्ने'],
             ['name' => 'ग्राहक व्यवस्थापन', 'slug' => 'clients.manage', 'description' => 'ग्राहकहरू व्यवस्थापन गर्न सक्ने'],
             ['name' => 'आपूर्तिकर्ता व्यवस्थापन', 'slug' => 'suppliers.manage', 'description' => 'आपूर्तिकर्ताहरू व्यवस्थापन गर्न सक्ने'],
@@ -35,7 +36,8 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'भुक्तानी व्यवस्थापन', 'slug' => 'payments.manage', 'description' => 'भुक्तानीहरू दर्ता गर्न सक्ने'],
             ['name' => 'खर्च व्यवस्थापन', 'slug' => 'expenses.manage', 'description' => 'खर्चहरू व्यवस्थापन गर्न सक्ने'],
             ['name' => 'खरिद आदेश व्यवस्थापन', 'slug' => 'purchase-orders.manage', 'description' => 'खरिद आदेशहरू व्यवस्थापन गर्न सक्ने'],
-            ['name' => 'प्रतिवेदन हेर्ने', 'slug' => 'reports.view', 'description' => 'प्रतिवेदनहरू हेर्न र डाउनलोड गर्न सक्ने'],
+            ['name' => 'प्रतिवेदन हेर्ने', 'slug' => 'reports.view', 'description' => 'प्रतिवेदन र खाता (ledger) हेर्न सक्ने'],
+            ['name' => 'अभिलेख हेर्ने', 'slug' => 'audit.view', 'description' => 'लेखा अभिलेख (audit log) हेर्न सक्ने'],
             ['name' => 'प्रयोगकर्ता व्यवस्थापन', 'slug' => 'users.manage', 'description' => 'प्रयोगकर्ताहरू व्यवस्थापन गर्न सक्ने'],
             ['name' => 'भूमिका व्यवस्थापन', 'slug' => 'roles.manage', 'description' => 'भूमिका र अनुमतिहरू व्यवस्थापन गर्न सक्ने'],
         ];
@@ -45,30 +47,31 @@ class RoleAndPermissionSeeder extends Seeder
         }
 
         $accountingPermissions = [
-            'products.manage', 'clients.manage', 'suppliers.manage', 'invoices.manage',
-            'payments.manage', 'expenses.manage', 'purchase-orders.manage', 'reports.view',
+            'dashboard.view', 'products.manage', 'clients.manage', 'suppliers.manage',
+            'invoices.manage', 'payments.manage', 'expenses.manage', 'purchase-orders.manage',
+            'reports.view',
         ];
 
         $roles = [
             'super-admin' => [
                 'name' => 'सुपर प्रशासक',
                 'description' => 'पूर्ण पहुँच भएको प्रशासक',
-                'permissions' => array_merge($accountingPermissions, ['users.manage', 'roles.manage']),
+                'permissions' => array_merge($accountingPermissions, ['users.manage', 'roles.manage', 'audit.view']),
             ],
             'admin' => [
                 'name' => 'प्रशासक',
                 'description' => 'लेखा कार्यहरू र प्रयोगकर्ता व्यवस्थापन',
-                'permissions' => array_merge($accountingPermissions, ['users.manage']),
+                'permissions' => array_merge($accountingPermissions, ['users.manage', 'audit.view']),
             ],
             'accountant' => [
                 'name' => 'लेखापाल',
                 'description' => 'बिल, भुक्तानी र खर्च दर्ता गर्न सक्ने',
-                'permissions' => ['products.manage', 'clients.manage', 'suppliers.manage', 'invoices.manage', 'payments.manage', 'expenses.manage', 'purchase-orders.manage', 'reports.view'],
+                'permissions' => ['dashboard.view', 'products.manage', 'clients.manage', 'suppliers.manage', 'invoices.manage', 'payments.manage', 'expenses.manage', 'purchase-orders.manage', 'reports.view'],
             ],
             'auditor' => [
                 'name' => 'लेखापरीक्षक',
                 'description' => 'प्रतिवेदन र लेखा अभिलेख समीक्षा गर्न सक्ने',
-                'permissions' => ['reports.view', 'invoices.manage'],
+                'permissions' => ['dashboard.view', 'reports.view', 'invoices.manage', 'audit.view'],
             ],
             'user' => [
                 'name' => 'प्रयोगकर्ता',

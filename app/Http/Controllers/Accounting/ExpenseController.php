@@ -7,6 +7,8 @@ use App\Models\Expense;
 use App\Models\Supplier;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseController extends Controller
 {
@@ -20,23 +22,26 @@ class ExpenseController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('expense_number', 'like', "%{$s}%")
-                  ->orWhere('description', 'like', "%{$s}%");
+                    ->orWhere('description', 'like', "%{$s}%");
             });
         }
         $expenses = $query->latest()->paginate(10);
         $categories = Expense::select('category')->distinct()->pluck('category');
+
         return view('accounting.expenses.index', compact('expenses', 'categories'));
     }
 
     public function create()
     {
         $suppliers = Supplier::active()->orderBy('name')->get();
+
         return view('accounting.expenses.create', compact('suppliers'));
     }
 
     public function show(Expense $expense)
     {
         $expense->load('supplier');
+
         return view('accounting.expenses.show', compact('expense'));
     }
 
@@ -59,31 +64,34 @@ class ExpenseController extends Controller
             $receiptPath = $request->file('receipt')->store('expenses/receipts', 'public');
         }
 
-        $expense = Expense::create([
-            'expense_number' => Expense::generateExpenseNumber(),
-            'category' => $validated['category'],
-            'description' => $validated['description'] ?? null,
-            'amount' => $validated['amount'],
-            'expense_date' => $validated['expense_date'],
-            'payment_method' => $validated['payment_method'] ?? null,
-            'reference' => $validated['reference'] ?? null,
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'receipt' => $receiptPath,
-        ]);
+        DB::transaction(function () use ($validated, $receiptPath) {
+            $expense = Expense::create([
+                'expense_number' => Expense::generateExpenseNumber(),
+                'category' => $validated['category'],
+                'description' => $validated['description'] ?? null,
+                'amount' => $validated['amount'],
+                'expense_date' => $validated['expense_date'],
+                'payment_method' => $validated['payment_method'] ?? null,
+                'reference' => $validated['reference'] ?? null,
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'receipt' => $receiptPath,
+            ]);
 
-        Transaction::create([
-            'transaction_number' => Transaction::generateTransactionNumber(),
-            'type' => 'expense',
-            'category' => $validated['category'],
-            'description' => $validated['description'] ?? "Expense {$expense->expense_number}",
-            'debit' => $validated['amount'],
-            'credit' => 0,
-            'balance' => -$validated['amount'],
-            'transaction_date' => $validated['expense_date'],
-            'reference_type' => Expense::class,
-            'reference_id' => $expense->id,
-        ]);
+            Transaction::create([
+                'transaction_number' => Transaction::generateTransactionNumber(),
+                'user_id' => Auth::id(),
+                'type' => 'expense',
+                'category' => $validated['category'],
+                'description' => $validated['description'] ?? "Expense {$expense->expense_number}",
+                'debit' => $validated['amount'],
+                'credit' => 0,
+                'balance' => -$validated['amount'],
+                'transaction_date' => $validated['expense_date'],
+                'reference_type' => Expense::class,
+                'reference_id' => $expense->id,
+            ]);
+        });
 
         return redirect()->route('accounting.expenses.index')
             ->with('success', 'Expense recorded successfully.');
@@ -92,6 +100,7 @@ class ExpenseController extends Controller
     public function edit(Expense $expense)
     {
         $suppliers = Supplier::active()->orderBy('name')->get();
+
         return view('accounting.expenses.edit', compact('expense', 'suppliers'));
     }
 
@@ -113,18 +122,22 @@ class ExpenseController extends Controller
             $validated['receipt'] = $request->file('receipt')->store('expenses/receipts', 'public');
         }
 
-        $expense->update($validated);
+        DB::transaction(function () use ($validated, $expense) {
+            $expense->update($validated);
 
-        Transaction::where('reference_type', Expense::class)
-            ->where('reference_id', $expense->id)
-            ->update([
-                'category' => $validated['category'],
-                'description' => $validated['description'] ?? "Expense {$expense->expense_number}",
-                'debit' => $validated['amount'],
-                'credit' => 0,
-                'balance' => -$validated['amount'],
-                'transaction_date' => $validated['expense_date'],
-            ]);
+            // Sync the linked ledger row model-by-model so the audit hook sees it.
+            Transaction::where('reference_type', Expense::class)
+                ->where('reference_id', $expense->id)
+                ->get()
+                ->each(fn (Transaction $transaction) => $transaction->update([
+                    'category' => $validated['category'],
+                    'description' => $validated['description'] ?? "Expense {$expense->expense_number}",
+                    'debit' => $validated['amount'],
+                    'credit' => 0,
+                    'balance' => -$validated['amount'],
+                    'transaction_date' => $validated['expense_date'],
+                ]));
+        });
 
         return redirect()->route('accounting.expenses.index')
             ->with('success', 'Expense updated successfully.');
@@ -132,11 +145,16 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
-        Transaction::where('reference_type', Expense::class)
-            ->where('reference_id', $expense->id)
-            ->delete();
+        DB::transaction(function () use ($expense) {
+            // Soft-delete the linked ledger row so the deletion itself is auditable
+            // and no posted entry is ever physically removed.
+            Transaction::where('reference_type', Expense::class)
+                ->where('reference_id', $expense->id)
+                ->get()
+                ->each(fn (Transaction $transaction) => $transaction->delete());
 
-        $expense->delete();
+            $expense->delete();
+        });
 
         return redirect()->route('accounting.expenses.index')
             ->with('success', 'Expense deleted successfully.');

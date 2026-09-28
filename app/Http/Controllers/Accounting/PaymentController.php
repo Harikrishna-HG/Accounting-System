@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Accounting;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
-use App\Models\Invoice;
 use App\Models\Client;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -21,10 +23,11 @@ class PaymentController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('payment_number', 'like', "%{$s}%")
-                  ->orWhere('reference', 'like', "%{$s}%");
+                    ->orWhere('reference', 'like', "%{$s}%");
             });
         }
         $payments = $query->latest()->paginate(10);
+
         return view('accounting.payments.index', compact('payments'));
     }
 
@@ -34,12 +37,14 @@ class PaymentController extends Controller
             ->orderBy('invoice_number')
             ->get(['id', 'invoice_number', 'client_name', 'due_amount']);
         $clients = Client::active()->orderBy('name')->get();
+
         return view('accounting.payments.create', compact('invoices', 'clients'));
     }
 
     public function show(Payment $payment)
     {
         $payment->load('invoice', 'client');
+
         return view('accounting.payments.show', compact('payment'));
     }
 
@@ -55,33 +60,36 @@ class PaymentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $payment = Payment::create([
-            'payment_number' => Payment::generatePaymentNumber(),
-            'invoice_id' => $validated['invoice_id'] ?? null,
-            'client_id' => $validated['client_id'] ?? null,
-            'type' => 'incoming',
-            'amount' => $validated['amount'],
-            'payment_method' => $validated['payment_method'] ?? null,
-            'reference' => $validated['reference'] ?? null,
-            'payment_date' => $validated['payment_date'],
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        DB::transaction(function () use ($validated) {
+            $payment = Payment::create([
+                'payment_number' => Payment::generatePaymentNumber(),
+                'invoice_id' => $validated['invoice_id'] ?? null,
+                'client_id' => $validated['client_id'] ?? null,
+                'type' => 'incoming',
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'] ?? null,
+                'reference' => $validated['reference'] ?? null,
+                'payment_date' => $validated['payment_date'],
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        $this->applyPaymentToInvoice($validated['invoice_id'] ?? null, $validated['amount']);
-        $this->adjustClientBalanceFromPayment($validated['invoice_id'] ?? null, $validated['amount'], 'decrement');
+            $this->applyPaymentToInvoice($validated['invoice_id'] ?? null, $validated['amount']);
+            $this->adjustClientBalanceFromPayment($validated['invoice_id'] ?? null, $validated['amount'], 'decrement');
 
-        Transaction::create([
-            'transaction_number' => Transaction::generateTransactionNumber(),
-            'type' => 'payment',
-            'category' => 'payment_received',
-            'description' => "Payment {$payment->payment_number} received",
-            'debit' => $validated['amount'],
-            'credit' => 0,
-            'balance' => $validated['amount'],
-            'transaction_date' => $validated['payment_date'],
-            'reference_type' => Payment::class,
-            'reference_id' => $payment->id,
-        ]);
+            Transaction::create([
+                'transaction_number' => Transaction::generateTransactionNumber(),
+                'user_id' => Auth::id(),
+                'type' => 'payment',
+                'category' => 'payment_received',
+                'description' => "Payment {$payment->payment_number} received",
+                'debit' => $validated['amount'],
+                'credit' => 0,
+                'balance' => $validated['amount'],
+                'transaction_date' => $validated['payment_date'],
+                'reference_type' => Payment::class,
+                'reference_id' => $payment->id,
+            ]);
+        });
 
         return redirect()->route('accounting.payments.index')
             ->with('success', 'Payment recorded successfully.');
@@ -92,11 +100,12 @@ class PaymentController extends Controller
         $invoices = Invoice::query()
             ->where(function ($q) use ($payment) {
                 $q->whereIn('status', ['unpaid', 'partial'])
-                  ->orWhere('id', $payment->invoice_id);
+                    ->orWhere('id', $payment->invoice_id);
             })
             ->orderBy('invoice_number')
             ->get(['id', 'invoice_number', 'client_name']);
         $clients = Client::active()->orderBy('name')->get();
+
         return view('accounting.payments.edit', compact('payment', 'invoices', 'clients'));
     }
 
@@ -115,25 +124,28 @@ class PaymentController extends Controller
         $oldInvoiceId = $payment->invoice_id;
         $oldAmount = $payment->amount;
 
-        $payment->update($validated);
+        DB::transaction(function () use ($validated, $payment, $oldInvoiceId, $oldAmount) {
+            $payment->update($validated);
 
-        // Reverse old payment effect
-        $this->applyPaymentToInvoice($oldInvoiceId, -$oldAmount);
-        $this->adjustClientBalanceFromPayment($oldInvoiceId, $oldAmount, 'increment');
+            // Reverse old payment effect
+            $this->applyPaymentToInvoice($oldInvoiceId, -$oldAmount);
+            $this->adjustClientBalanceFromPayment($oldInvoiceId, $oldAmount, 'increment');
 
-        // Apply new payment effect
-        $this->applyPaymentToInvoice($validated['invoice_id'] ?? null, $validated['amount']);
-        $this->adjustClientBalanceFromPayment($validated['invoice_id'] ?? null, $validated['amount'], 'decrement');
+            // Apply new payment effect
+            $this->applyPaymentToInvoice($validated['invoice_id'] ?? null, $validated['amount']);
+            $this->adjustClientBalanceFromPayment($validated['invoice_id'] ?? null, $validated['amount'], 'decrement');
 
-        // Sync transaction
-        Transaction::where('reference_type', Payment::class)
-            ->where('reference_id', $payment->id)
-            ->update([
-                'debit' => $validated['amount'],
-                'credit' => 0,
-                'balance' => $validated['amount'],
-                'transaction_date' => $validated['payment_date'],
-            ]);
+            // Sync the linked ledger row model-by-model so the audit hook sees it.
+            Transaction::where('reference_type', Payment::class)
+                ->where('reference_id', $payment->id)
+                ->get()
+                ->each(fn (Transaction $transaction) => $transaction->update([
+                    'debit' => $validated['amount'],
+                    'credit' => 0,
+                    'balance' => $validated['amount'],
+                    'transaction_date' => $validated['payment_date'],
+                ]));
+        });
 
         return redirect()->route('accounting.payments.index')
             ->with('success', 'Payment updated successfully.');
@@ -141,19 +153,23 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment)
     {
-        $invoiceId = $payment->invoice_id;
-        $amount = $payment->amount;
+        DB::transaction(function () use ($payment) {
+            $invoiceId = $payment->invoice_id;
+            $amount = $payment->amount;
 
-        // Reverse payment effect
-        $this->applyPaymentToInvoice($invoiceId, -$amount);
-        $this->adjustClientBalanceFromPayment($invoiceId, $amount, 'increment');
+            // Reverse payment effect
+            $this->applyPaymentToInvoice($invoiceId, -$amount);
+            $this->adjustClientBalanceFromPayment($invoiceId, $amount, 'increment');
 
-        // Cleanup transaction
-        Transaction::where('reference_type', Payment::class)
-            ->where('reference_id', $payment->id)
-            ->delete();
+            // Soft-delete the linked ledger row so the deletion itself is auditable
+            // and no posted entry is ever physically removed.
+            Transaction::where('reference_type', Payment::class)
+                ->where('reference_id', $payment->id)
+                ->get()
+                ->each(fn (Transaction $transaction) => $transaction->delete());
 
-        $payment->delete();
+            $payment->delete();
+        });
 
         return redirect()->route('accounting.payments.index')
             ->with('success', 'Payment deleted successfully.');
@@ -161,10 +177,14 @@ class PaymentController extends Controller
 
     private function applyPaymentToInvoice(?int $invoiceId, float $amount): void
     {
-        if (!$invoiceId || $amount == 0) return;
+        if (! $invoiceId || $amount == 0) {
+            return;
+        }
 
         $invoice = Invoice::find($invoiceId);
-        if (!$invoice) return;
+        if (! $invoice) {
+            return;
+        }
 
         $newPaid = max(0, $invoice->paid_amount + $amount);
         $newDue = max(0, $invoice->total - $newPaid);
@@ -186,13 +206,19 @@ class PaymentController extends Controller
 
     private function adjustClientBalanceFromPayment(?int $invoiceId, float $amount, string $operation): void
     {
-        if (!$invoiceId || $amount == 0) return;
+        if (! $invoiceId || $amount == 0) {
+            return;
+        }
 
         $invoice = Invoice::find($invoiceId);
-        if (!$invoice || !$invoice->client_id) return;
+        if (! $invoice || ! $invoice->client_id) {
+            return;
+        }
 
         $client = Client::find($invoice->client_id);
-        if (!$client) return;
+        if (! $client) {
+            return;
+        }
 
         if ($operation === 'increment') {
             $client->increment('balance', $amount);

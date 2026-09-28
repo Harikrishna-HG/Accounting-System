@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Accounting;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
     public function index()
     {
         $clients = Client::orderBy('name')->paginate(10);
+
         return view('accounting.clients.index', compact('clients'));
     }
 
@@ -32,7 +34,9 @@ class ClientController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
 
-        Client::create($validated);
+        DB::transaction(function () use ($validated) {
+            Client::create($validated);
+        });
 
         return redirect()->route('accounting.clients.index')
             ->with('success', 'Client added successfully.');
@@ -56,7 +60,9 @@ class ClientController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
 
-        $client->update($validated);
+        DB::transaction(function () use ($client, $validated) {
+            $client->update($validated);
+        });
 
         return redirect()->route('accounting.clients.index')
             ->with('success', 'Client updated successfully.');
@@ -64,7 +70,10 @@ class ClientController extends Controller
 
     public function destroy(Client $client)
     {
-        $client->delete();
+        DB::transaction(function () use ($client) {
+            $client->delete();
+        });
+
         return redirect()->route('accounting.clients.index')
             ->with('success', 'Client deleted successfully.');
     }
@@ -72,6 +81,7 @@ class ClientController extends Controller
     public function show(Client $client)
     {
         $invoices = $client->invoices()->latest()->paginate(10);
+
         return view('accounting.clients.show', compact('client', 'invoices'));
     }
 }

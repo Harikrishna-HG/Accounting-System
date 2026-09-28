@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
 {
+    use Auditable, SoftDeletes;
+
     protected $fillable = [
-        'transaction_number', 'type', 'category', 'description', 'debit', 'credit',
+        'transaction_number', 'user_id', 'type', 'category', 'description', 'debit', 'credit',
         'balance', 'transaction_date', 'reference_type', 'reference_id', 'notes',
     ];
 
@@ -23,11 +27,12 @@ class Transaction extends Model
 
     public static function generateTransactionNumber()
     {
-        $prefix = 'TXN-' . date('Ymd');
-        $last = self::where('transaction_number', 'like', $prefix . '%')
+        $prefix = 'TXN-'.date('Ymd');
+        $last = self::where('transaction_number', 'like', $prefix.'%')
             ->orderBy('id', 'desc')
             ->first();
         $num = $last ? intval(substr($last->transaction_number, -4)) + 1 : 1;
-        return $prefix . '-' . str_pad($num, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.str_pad($num, 4, '0', STR_PAD_LEFT);
     }
 }

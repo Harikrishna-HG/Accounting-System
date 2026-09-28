@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
 {
+    use Auditable, SoftDeletes;
+
     protected $fillable = [
         'name', 'email', 'phone', 'address', 'company', 'pan_vat',
         'total_purchases', 'balance', 'is_active',
