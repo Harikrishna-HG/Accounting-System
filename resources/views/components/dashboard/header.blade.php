@@ -96,7 +96,7 @@ document.addEventListener('click', function(e) {
     border: none;
     background: transparent;
     padding: 10px 0;
-    font-size: 1.3rem;
+    font-size:var(--fs-1-3);
     font-family: 'Noto Sans Devanagari', sans-serif;
     outline: none;
     width: 100%;
@@ -112,14 +112,14 @@ document.addEventListener('click', function(e) {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 1.3rem;
+    font-size:var(--fs-1-3);
     color: #6c757d;
     white-space: nowrap;
 }
 
 .header-notifications {
     position: relative;
-    font-size: 1.8rem;
+    font-size:var(--fs-1-8);
     color: #6c757d;
     cursor: pointer;
 }
@@ -148,7 +148,7 @@ document.addEventListener('click', function(e) {
     justify-content: center;
     color: white;
     font-weight: 600;
-    font-size: 1.4rem;
+    font-size:var(--fs-1-4);
     cursor: pointer;
 }
 
@@ -181,7 +181,7 @@ document.addEventListener('click', function(e) {
     gap: 10px;
     padding: 10px 18px;
     color: #333;
-    font-size: 1.3rem;
+    font-size:var(--fs-1-3);
     text-decoration: none;
     transition: background 0.2s;
     cursor: pointer;
@@ -195,7 +195,7 @@ document.addEventListener('click', function(e) {
 .dropdown-item i {
     width: 18px;
     color: #6c757d;
-    font-size: 1.4rem;
+    font-size:var(--fs-1-4);
 }
 
 .dropdown-item:hover {

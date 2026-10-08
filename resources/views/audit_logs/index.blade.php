@@ -49,7 +49,7 @@
                         <td>
                             @if($log->user)
                                 {{ $log->user->name }}
-                                <div style="font-size:1.1rem;color:#6c757d;">{{ $log->user->email }}</div>
+                                <div style="font-size:var(--fs-1-1);color:#6c757d;">{{ $log->user->email }}</div>
                             @else
                                 <span style="color:#6c757d;">—</span>
                             @endif
@@ -57,7 +57,7 @@
                         <td>
                             @if($log->auditable_type)
                                 {{ class_basename($log->auditable_type) }}
-                                <div style="font-size:1.1rem;color:#6c757d;">#{{ $log->auditable_id }}</div>
+                                <div style="font-size:var(--fs-1-1);color:#6c757d;">#{{ $log->auditable_id }}</div>
                             @else
                                 <span style="color:#6c757d;">—</span>
                             @endif
@@ -67,7 +67,7 @@
                         <td><a href="{{ route('accounting.audit-logs.show', $log) }}" class="link-detail">Details</a></td>
                     </tr>
                     @empty
-                    <tr><td colspan="7" style="text-align:center;padding:40px;color:#6c757d;"><i class="fas fa-clock-rotate-left" style="font-size:3.6rem;display:block;margin-bottom:12px;color:#dee2e6;"></i>No audit records yet.</td></tr>
+                    <tr><td colspan="7" style="text-align:center;padding:40px;color:#6c757d;"><i class="fas fa-clock-rotate-left" style="font-size:var(--fs-3-6);display:block;margin-bottom:12px;color:#dee2e6;"></i>No audit records yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -79,21 +79,21 @@
 .dashboard-content{padding:30px}
 .page-header{margin-bottom:30px}
 .header-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
-.page-title{font-size:2.2rem;font-weight:700;color:#1a1a2e;margin:0}
-.page-subtitle{color:#6c757d;margin:5px 0 0 0;font-size:1.3rem}
+.page-title{font-size:var(--fs-2-2);font-weight:700;color:#1a1a2e;margin:0}
+.page-subtitle{color:#6c757d;margin:5px 0 0 0;font-size:var(--fs-1-3)}
 .list-card{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden}
 .table-responsive{overflow-x:auto}
 .data-table{width:100%;border-collapse:collapse}
-.data-table th{text-align:left;padding:10px 12px;font-size:1.2rem;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.5px;background:#fafafa;border-bottom:1px solid #f0f0f0}
-.data-table td{padding:10px 12px;border-bottom:1px solid #f8f9fa;font-size:1.3rem;color:#333;vertical-align:middle}
-.event-badge{padding:3px 10px;border-radius:12px;font-size:1.1rem;font-weight:600;white-space:nowrap}
+.data-table th{text-align:left;padding:10px 12px;font-size:var(--fs-1-2);font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.5px;background:#fafafa;border-bottom:1px solid #f0f0f0}
+.data-table td{padding:10px 12px;border-bottom:1px solid #f8f9fa;font-size:var(--fs-1-3);color:#333;vertical-align:middle}
+.event-badge{padding:3px 10px;border-radius:12px;font-size:var(--fs-1-1);font-weight:600;white-space:nowrap}
 .link-detail{color:#CD2737;font-weight:600;text-decoration:none}
 .link-detail:hover{text-decoration:underline}
 .filter-form{display:flex;flex-wrap:wrap;gap:10px;padding:15px 20px;align-items:center}
-.filter-input{padding:8px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:1.3rem;font-family:inherit}
-.btn-filter{background:#CD2737;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:1.3rem;cursor:pointer;font-weight:600}
+.filter-input{padding:8px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:var(--fs-1-3);font-family:inherit}
+.btn-filter{background:#CD2737;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:var(--fs-1-3);cursor:pointer;font-weight:600}
 .btn-filter:hover{background:#b02130}
-.btn-reset{padding:8px 16px;border-radius:8px;font-size:1.3rem;color:#6c757d;text-decoration:none;border:1px solid #e0e0e0}
+.btn-reset{padding:8px 16px;border-radius:8px;font-size:var(--fs-1-3);color:#6c757d;text-decoration:none;border:1px solid #e0e0e0}
 .btn-reset:hover{background:#f8f9fa}
 .pagination-wrapper{padding:12px 20px;border-top:1px solid #f0f0f0}
 </style>

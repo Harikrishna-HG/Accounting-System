@@ -8,19 +8,19 @@ language switcher.
 
 ## Features
 
-| Module | What it covers |
-| --- | --- |
-| Dashboard | Revenue, receivables, expenses, monthly totals, recent activity |
-| Products | Item catalogue with SKU, price, and stock |
-| Clients | Customer records including PAN and contact details |
-| Suppliers | Vendor records for payables |
-| Invoices | Line items, discount, tax, status tracking, printable view |
-| Payments | Full and partial payments against invoices, paid/due balances |
-| Expenses | Categorised expense tracking by date |
-| Purchase Orders | Orders raised to suppliers with line items |
-| Ledger | Combined transaction history of invoices, payments, and expenses |
-| Reports | Report index and profit & loss statement |
-| Administration | Users, roles, and permission assignment |
+| Module          | What it covers                                                   |
+| --------------- | ---------------------------------------------------------------- |
+| Dashboard       | Revenue, receivables, expenses, monthly totals, recent activity  |
+| Products        | Item catalogue with SKU, price, and stock                        |
+| Clients         | Customer records including PAN and contact details               |
+| Suppliers       | Vendor records for payables                                      |
+| Invoices        | Line items, discount, tax, status tracking, printable view       |
+| Payments        | Full and partial payments against invoices, paid/due balances    |
+| Expenses        | Categorised expense tracking by date                             |
+| Purchase Orders | Orders raised to suppliers with line items                       |
+| Ledger          | Combined transaction history of invoices, payments, and expenses |
+| Reports         | Report index and profit & loss statement                         |
+| Administration  | Users, roles, and permission assignment                          |
 
 ### Invoicing rules
 
@@ -58,12 +58,12 @@ php artisan db:seed
 
 ## Seeded accounts
 
-| Role | Email | Password |
-| --- | --- | --- |
-| सुपर प्रशासक (super admin) | `admin@gmail.com` | `Admin@123` |
-| प्रशासक (admin) | `manager@gmail.com` | `Manager@123` |
-| लेखापाल (accountant) | `accountant@gmail.com` | `Accountant@123` |
-| लेखापरीक्षक (auditor) | `auditor@gmail.com` | `Auditor@123` |
+| Role                       | Email                  | Password         |
+| -------------------------- | ---------------------- | ---------------- |
+| सुपर प्रशासक (super admin) | `admin@gmail.com`      | `Admin@123`      |
+| प्रशासक (admin)            | `manager@gmail.com`    | `Manager@123`    |
+| लेखापाल (accountant)       | `accountant@gmail.com` | `Accountant@123` |
+| लेखापरीक्षक (auditor)      | `auditor@gmail.com`    | `Auditor@123`    |
 
 > Change these before deploying anywhere. They exist for local development only.
 
@@ -112,7 +112,7 @@ tests/Feature/                     Pest feature tests
 ## Notes
 
 - This project was converted from an earlier news portal. The folder and GitHub
-  repository are still named `news-ai`, which is a leftover and no longer reflects
+  repository are still named `accounting-system`, which is a leftover and no longer reflects
   what the software does. There is no AI functionality in the codebase.
 - `2026_06_14_000010_remove_news_features.php` drops the tables from that earlier
   version. It has no `down()` implementation, so rolling it back is not supported.

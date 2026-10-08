@@ -153,22 +153,26 @@
 </aside>
 
 <style>
-.mobile-menu-btn { position: fixed; top: 16px; left: 16px; width: 40px; height: 40px; background: #CD2737; border: none; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 1001; box-shadow: 0 4px 15px rgba(205, 39, 55, 0.4); color: white; font-size: 1.8rem; }
+.mobile-menu-btn { position: fixed; top: 16px; left: 16px; width: 40px; height: 40px; background: #CD2737; border: none; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 1001; box-shadow: 0 4px 15px rgba(205, 39, 55, 0.4); color: white; font-size:var(--fs-1-8); }
 .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; opacity: 0; transition: opacity 0.3s; z-index: 999; }
 .sidebar-overlay.active { display: block; opacity: 1; }
 .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 80px; background: #CD2737; transition: width 0.3s ease; overflow: hidden; z-index: 1000; display: flex; flex-direction: column; }
-.sidebar.active { width: 280px; }
-.sidebar-header { display: flex; align-items: center; padding: 16px; height: 64px; border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; }
-.toggle-btn { min-width: 36px; height: 36px; background: rgba(255,255,255,0.15); border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.85); transition: all 0.3s; font-size: 1.4rem; }
+.sidebar.active { width: 340px; }
+.sidebar-header { display: flex; align-items: center; padding: 16px; height: 64px; border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; min-width: 0; }
+.toggle-btn { min-width: 36px; height: 36px; background: rgba(255,255,255,0.15); border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.85); transition: all 0.3s; font-size:var(--fs-1-4); }
 .toggle-btn:hover { background: rgba(255,255,255,0.25); color: white; }
-.logo-text { margin-left: 14px; font-size: 1.8rem; font-weight: 700; color: white; white-space: nowrap; opacity: 0; transition: opacity 0.3s; }
+/* 340px sidebar - 32px padding - 36px toggle - 14px gap = 258px for the
+   label; the fluid scale caps "Accounting System" at 240px (>=1924px
+   viewports), so it fits at every width. Ellipsis is the safety net for
+   longer brand names or larger user font settings. */
+.logo-text { margin-left: 14px; font-size:var(--fs-1-8); font-weight: 700; color: white; white-space: nowrap; opacity: 0; transition: opacity 0.3s; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sidebar.active .logo-text { opacity: 1; }
 .sidebar-user { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; gap: 10px; }
-.user-avatar { min-width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.5rem; flex-shrink: 0; }
+.user-avatar { min-width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size:var(--fs-1-5); flex-shrink: 0; }
 .user-info { display: flex; flex-direction: column; opacity: 0; transition: opacity 0.3s; overflow: hidden; }
 .sidebar.active .user-info { opacity: 1; }
-.user-name { font-size: 1.3rem; font-weight: 600; color: white; white-space: nowrap; }
-.user-role { font-size: 1.1rem; color: rgba(255,255,255,0.75); }
+.user-name { font-size:var(--fs-1-3); font-weight: 600; color: white; white-space: nowrap; }
+.user-role { font-size:var(--fs-1-1); color: rgba(255,255,255,0.75); }
 .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
 .sidebar-nav::-webkit-scrollbar { width: 3px; }
 .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
@@ -177,10 +181,10 @@
 .menu-link { display: flex; align-items: center; padding: 12px 12px; color: rgba(255,255,255,0.8); text-decoration: none; border-radius: 10px; transition: all 0.25s; gap: 0; position: relative; }
 .menu-link:hover { background: rgba(255,255,255,0.12); color: white; }
 .menu-link.active { background: rgba(255,255,255,0.2); color: white; }
-.menu-icon { min-width: 36px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
-.menu-text { margin-left: 10px; font-size: 1.3rem; font-weight: 500; white-space: nowrap; opacity: 0; transition: opacity 0.3s; }
+.menu-icon { min-width: 36px; display: flex; align-items: center; justify-content: center; font-size:var(--fs-1-6); }
+.menu-text { margin-left: 10px; font-size:var(--fs-1-3); font-weight: 500; white-space: nowrap; opacity: 0; transition: opacity 0.3s; }
 .sidebar.active .menu-text { opacity: 1; }
-.menu-badge { margin-left: auto; background: rgba(255,255,255,0.2); color: white; padding: 2px 8px; border-radius: 12px; font-size: 1.1rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+.menu-badge { margin-left: auto; background: rgba(255,255,255,0.2); color: white; padding: 2px 8px; border-radius: 12px; font-size:var(--fs-1-1); font-weight: 600; opacity: 0; transition: opacity 0.3s; }
 .sidebar.active .menu-badge { opacity: 1; }
 .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.15); padding: 12px 0; flex-shrink: 0; }
 @media (max-width: 768px) {

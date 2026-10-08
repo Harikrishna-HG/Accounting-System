@@ -1,0 +1,1 @@
+@include('errors._shell', ['code' => '500', 'title' => 'Something went wrong', 'message' => 'We could not complete that request. Please try again, or contact your administrator if it keeps failing.'])

@@ -7,13 +7,14 @@
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        @include('layouts._type-scale')
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html { font-size: 78.125%; }
 
         body {
             font-family: 'Noto Sans Devanagari', sans-serif;
-            font-size: 1.6rem;
+            font-size:var(--fs-1-6);
             background: linear-gradient(135deg, #dc3545, #c82333);
             min-height: 100vh;
             display: flex;
@@ -94,20 +95,20 @@
         }
 
         .logo-text {
-            font-size: 2.4rem;
+            font-size:var(--fs-2-4);
             font-weight: 700;
             color: #dc3545;
         }
 
         .brand-title {
-            font-size: 2.8rem;
+            font-size:var(--fs-2-8);
             font-weight: 700;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .brand-tagline {
-            font-size: 1.4rem;
+            font-size:var(--fs-1-4);
             opacity: 0.95;
             line-height: 1.6;
             margin-bottom: 20px;
@@ -123,7 +124,7 @@
         .brand-features li,
         .brand-benefits li {
             padding: 8px 0;
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -175,7 +176,7 @@
 
         .login-header h2,
         .signup-header h2 {
-            font-size: 2.2rem;
+            font-size:var(--fs-2-2);
             color: #333;
             margin-bottom: 6px;
             font-weight: 700;
@@ -184,7 +185,7 @@
         .login-header p,
         .signup-header p {
             color: #666;
-            font-size: 1.4rem;
+            font-size:var(--fs-1-4);
         }
 
         .login-form,
@@ -203,7 +204,7 @@
         .form-group label {
             font-weight: 600;
             color: #333;
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
             margin-left: 4px;
         }
 
@@ -225,7 +226,7 @@
             top: 50%;
             transform: translateY(-50%);
             color: #999;
-            font-size: 1.6rem;
+            font-size:var(--fs-1-6);
             pointer-events: none;
         }
 
@@ -234,7 +235,7 @@
             border: 2px solid #e9ecef;
             border-radius: 8px;
             width: 100%;
-            font-size: 1.4rem;
+            font-size:var(--fs-1-4);
             font-family: 'Noto Sans Devanagari', sans-serif;
             transition: all 0.3s;
             background: #f8f9fa;
@@ -249,7 +250,7 @@
             border: none;
             cursor: pointer;
             padding: 4px;
-            font-size: 1.4rem;
+            font-size:var(--fs-1-4);
             line-height: 1;
             color: #999;
             z-index: 2;
@@ -272,7 +273,7 @@
         }
 
         .input-error {
-            font-size: 1.1rem;
+            font-size:var(--fs-1-1);
             color: #dc3545;
             margin-top: 2px;
             display: none;
@@ -295,7 +296,7 @@
             border: none;
             padding: 12px;
             border-radius: 8px;
-            font-size: 1.5rem;
+            font-size:var(--fs-1-5);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -365,7 +366,7 @@
 
         .divider span {
             color: #999;
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
         }
 
         .social-login,
@@ -385,7 +386,7 @@
             border-radius: 8px;
             background: white;
             color: #666;
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
@@ -408,7 +409,7 @@
             text-align: center;
             margin-top: 16px;
             color: #666;
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
         }
 
         .signup-link a,
@@ -430,7 +431,7 @@
             color: #721c24;
             padding: 10px 15px;
             border-radius: 8px;
-            font-size: 1.4rem;
+            font-size:var(--fs-1-4);
             border-left: 4px solid #dc3545;
             display: none;
             margin-bottom: 16px;
@@ -446,7 +447,7 @@
             color: #155724;
             padding: 10px 15px;
             border-radius: 8px;
-            font-size: 1.4rem;
+            font-size:var(--fs-1-4);
             border-left: 4px solid #28a745;
             display: none;
             margin-bottom: 16px;
@@ -473,7 +474,7 @@
             color: white;
             margin-bottom: 10px;
             animation: slideIn 0.5s ease-out;
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
             display: flex;
             align-items: center;
         }
@@ -504,7 +505,7 @@
         }
 
         .remember-me label {
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
             color: #666;
             cursor: pointer;
             font-weight: 400;
@@ -513,7 +514,7 @@
         .forgot-password {
             color: #dc3545;
             text-decoration: none;
-            font-size: 1.3rem;
+            font-size:var(--fs-1-3);
             font-weight: 500;
             transition: color 0.3s;
         }
@@ -540,7 +541,7 @@
         }
 
         .checkbox-group label {
-            font-size: 1.4rem;
+            font-size:var(--fs-1-4);
             color: #666;
             cursor: pointer;
             font-weight: 400;
@@ -587,7 +588,7 @@
         }
 
         .password-hint {
-            font-size: 1.2rem;
+            font-size:var(--fs-1-2);
             color: #666;
         }
 
@@ -616,7 +617,7 @@
 
             .login-header h2,
             .signup-header h2 {
-                font-size: 2.0rem;
+                font-size:var(--fs-2);
             }
 
             .social-login,
@@ -635,12 +636,12 @@
 
             .login-header h2,
             .signup-header h2 {
-                font-size: 1.8rem;
+                font-size:var(--fs-1-8);
             }
 
-            .brand-title { font-size: 2.2rem; }
+            .brand-title { font-size:var(--fs-2-2); }
 
-            .form-group input { font-size: 1.4rem; padding: 10px 36px 10px 36px; }
+            .form-group input { font-size:var(--fs-1-4); padding: 10px 36px 10px 36px; }
 
             .form-row { grid-template-columns: 1fr; }
         }
