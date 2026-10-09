@@ -13,18 +13,18 @@
      unchanged; below and above that the type eases in and out. --}}
 
         :root {
-            --fs-1-1: clamp(0.968rem, 0.836rem + 0.257vw, 1.232rem);
-            --fs-1-15: clamp(1.012rem, 0.874rem + 0.269vw, 1.288rem);
-            --fs-1-2: clamp(1.056rem, 0.912rem + 0.281vw, 1.344rem);
-            --fs-1-3: clamp(1.144rem, 0.988rem + 0.304vw, 1.456rem);
-            --fs-1-35: clamp(1.188rem, 1.026rem + 0.316vw, 1.512rem);
-            --fs-1-4: clamp(1.232rem, 1.064rem + 0.328vw, 1.568rem);
-            --fs-1-5: clamp(1.32rem, 1.14rem + 0.351vw, 1.68rem);
-            --fs-1-6: clamp(1.408rem, 1.216rem + 0.374vw, 1.792rem);
-            --fs-1-8: clamp(1.584rem, 1.368rem + 0.421vw, 2.016rem);
-            --fs-2: clamp(1.76rem, 1.52rem + 0.468vw, 2.24rem);
-            --fs-2-2: clamp(1.936rem, 1.672rem + 0.515vw, 2.464rem);
-            --fs-2-4: clamp(2.112rem, 1.824rem + 0.562vw, 2.688rem);
-            --fs-2-8: clamp(2.464rem, 2.128rem + 0.655vw, 3.136rem);
-            --fs-3-6: clamp(3.168rem, 2.736rem + 0.842vw, 4.032rem);
+            --fs-1-1: clamp(0.717rem, 0.836rem + 0.257vw, 0.912rem);
+            --fs-1-15: clamp(0.750rem, 0.874rem + 0.269vw, 0.954rem);
+            --fs-1-2: clamp(0.782rem, 0.912rem + 0.281vw, 0.995rem);
+            --fs-1-3: clamp(0.847rem, 0.988rem + 0.304vw, 1.079rem);
+            --fs-1-35: clamp(0.880rem, 1.026rem + 0.316vw, 1.120rem);
+            --fs-1-4: clamp(0.912rem, 1.064rem + 0.328vw, 1.162rem);
+            --fs-1-5: clamp(0.977rem, 1.140rem + 0.351vw, 1.244rem);
+            --fs-1-6: clamp(1.042rem, 1.216rem + 0.374vw, 1.327rem);
+            --fs-1-8: clamp(1.173rem, 1.368rem + 0.421vw, 1.494rem);
+            --fs-2: clamp(1.303rem, 1.520rem + 0.468vw, 1.659rem);
+            --fs-2-2: clamp(1.434rem, 1.672rem + 0.515vw, 1.825rem);
+            --fs-2-4: clamp(1.565rem, 1.824rem + 0.562vw, 1.991rem);
+            --fs-2-8: clamp(1.825rem, 2.128rem + 0.655vw, 2.322rem);
+            --fs-3-6: clamp(2.347rem, 2.736rem + 0.842vw, 2.986rem);
         }

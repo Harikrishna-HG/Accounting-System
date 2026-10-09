@@ -210,7 +210,7 @@ class InvoiceController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated, $invoice, $subtotal, $itemsData, $discount, $tax, $total, $dueAmount, $newStatus, $oldTotal, $oldClientId) {
+        DB::transaction(function () use ($validated, $invoice, $subtotal, $itemsData, $discount, $tax, $total, $dueAmount, $newStatus, $oldTotal, $oldClientId, $paidAmount) {
             $invoice->update([
                 'client_id' => $validated['client_id'] ?? null,
                 'client_name' => $validated['client_name'],
@@ -240,23 +240,34 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            // Adjust client balances on client_id reassignment
-            if ((int) $oldClientId !== (int) ($validated['client_id'] ?? 0) && $oldClientId) {
+            // Adjust client balances. Only the outstanding part of an invoice is
+            // carried in the client's balance, so the amount already paid is
+            // excluded when the invoice moves between clients.
+            $oldClientIdInt = (int) $oldClientId;
+            $newClientId = $validated['client_id'] ?? null;
+            $newClientIdInt = (int) $newClientId;
+            $sameClient = $oldClientIdInt !== 0 && $oldClientIdInt === $newClientIdInt;
+            $outstanding = $total - $paidAmount;
+
+            if (! $sameClient && $oldClientIdInt !== 0) {
                 $oldClient = Client::find($oldClientId);
                 if ($oldClient) {
                     $oldClient->decrement('total_purchases', $oldTotal);
-                    $oldClient->decrement('balance', $oldTotal);
+                    $oldClient->decrement('balance', $oldTotal - $paidAmount);
                 }
             }
-            $newClientId = $validated['client_id'] ?? null;
 
             if ($newClientId) {
                 $newClient = Client::find($newClientId);
                 if ($newClient) {
-                    $diffTotal = $total - ((int) $oldClientId === (int) $newClientId ? $oldTotal : 0);
-                    if ($diffTotal != 0) {
-                        $newClient->increment('total_purchases', $diffTotal);
-                        $newClient->increment('balance', $diffTotal);
+                    $purchasesDelta = $sameClient ? $total - $oldTotal : $total;
+                    $balanceDelta = $sameClient ? $total - $oldTotal : $outstanding;
+
+                    if ($purchasesDelta != 0) {
+                        $newClient->increment('total_purchases', $purchasesDelta);
+                    }
+                    if ($balanceDelta != 0) {
+                        $newClient->increment('balance', $balanceDelta);
                     }
                 }
             }
@@ -279,18 +290,27 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
+        // Deleting an invoice that customers have already paid would leave the
+        // payment and its ledger row dangling against a soft-deleted invoice.
+        if ($invoice->payments()->exists()) {
+            return redirect()->route('accounting.invoices.index')
+                ->with('error', 'यो इनभ्वाइसमा भुक्तानी भएको छ। पहिले सम्बन्धित भुक्तानी हटाउनुहोस्। '
+                    .'This invoice has payments recorded against it; remove those payments first.');
+        }
+
         DB::transaction(function () use ($invoice) {
             $clientId = $invoice->client_id;
             $total = $invoice->total;
+            $paid = $invoice->paid_amount;
 
             $invoice->items()->delete();
 
-            // Reverse client balance
+            // Reverse only the outstanding part the invoice added to the balance.
             if ($clientId) {
                 $client = Client::find($clientId);
                 if ($client) {
                     $client->decrement('total_purchases', $total);
-                    $client->decrement('balance', $total);
+                    $client->decrement('balance', $total - $paid);
                 }
             }
 
