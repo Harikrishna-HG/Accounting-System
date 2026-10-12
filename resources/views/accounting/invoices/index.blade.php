@@ -33,7 +33,7 @@
                         <td class="actions-cell"><div class="action-btns">
                             <a href="{{ route('accounting.invoices.show', $inv) }}" class="action-btn" style="background:#e8f5e9;color:#28a745;" title="View"><i class="fas fa-eye"></i></a>
                             <a href="{{ route('accounting.invoices.edit', $inv) }}" class="action-btn edit" title="Edit"><i class="fas fa-edit"></i></a>
-                            <a href="{{ route('accounting.invoices.print', $inv) }}" class="action-btn" style="background:#fff3cd;color:#856404;" title="Print" target="_blank"><i class="fas fa-print"></i></a>
+                            <a href="{{ route('accounting.invoices.print', $inv) }}" class="action-btn" style="background:#fff3cd;color:#856404;" title="Print / PDF"><i class="fas fa-file-pdf"></i></a>
                             <form action="{{ route('accounting.invoices.destroy', $inv) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete this invoice?')">@csrf @method('DELETE')<button type="submit" class="action-btn delete"><i class="fas fa-trash"></i></button></form>
                         </div></td>
                     </tr>

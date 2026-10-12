@@ -7,6 +7,8 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\PDF as DomPdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -332,6 +334,42 @@ class InvoiceController extends Controller
     {
         $invoice->load('items');
 
-        return view('accounting.invoices.print', compact('invoice'));
+        $pdf = Pdf::loadView('accounting.invoices.pdf', [
+            'invoice' => $invoice,
+            'business' => config('accounting.business'),
+        ])->setPaper('a4');
+
+        $this->registerInvoiceFonts($pdf);
+
+        return $pdf->download("{$invoice->invoice_number}.pdf");
+    }
+
+    /**
+     * Register the bundled Mukta font (Devanagari + Latin) with dompdf so the
+     * Nepali date and names render instead of blank boxes.
+     */
+    private function registerInvoiceFonts(DomPdf $pdf): void
+    {
+        $dompdf = $pdf->getDomPDF();
+
+        // dompdf writes its generated font metrics here; make sure the
+        // directory exists on a fresh deployment before registering fonts.
+        $fontDir = $dompdf->getOptions()->getFontDir();
+        if (! is_dir($fontDir)) {
+            mkdir($fontDir, 0775, true);
+        }
+
+        $metrics = $dompdf->getFontMetrics();
+        $family = config('accounting.fonts.family');
+
+        $metrics->registerFont(
+            ['family' => $family, 'style' => 'normal', 'weight' => 'normal'],
+            config('accounting.fonts.regular')
+        );
+
+        $metrics->registerFont(
+            ['family' => $family, 'style' => 'normal', 'weight' => 'bold'],
+            config('accounting.fonts.bold')
+        );
     }
 }

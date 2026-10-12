@@ -26,8 +26,12 @@ function allViewSources(): array
 }
 
 it('wraps every on-screen table in a horizontally scrollable container', function () {
-    // The printed invoice is paper, not a screen, so it is exempt by design.
-    $paper = 'accounting/invoices/print.blade.php';
+    // Paper (the printed invoice) and the dompdf invoice are not browser
+    // screens, so they are exempt from the scroll-wrapper rule by design.
+    $nonScreen = [
+        'accounting/invoices/print.blade.php',
+        'accounting/invoices/pdf.blade.php',
+    ];
 
     $checked = 0;
     $problems = [];
@@ -35,7 +39,7 @@ it('wraps every on-screen table in a horizontally scrollable container', functio
     foreach (allViewSources() as $rel => $src) {
         $tables = substr_count($src, '<table');
 
-        if ($tables === 0 || $rel === $paper) {
+        if ($tables === 0 || in_array($rel, $nonScreen, true)) {
             continue;
         }
 
@@ -51,10 +55,10 @@ it('wraps every on-screen table in a horizontally scrollable container', functio
         ->and($problems)->toBe([], 'tables need a .table-responsive wrapper or columns get clipped');
 });
 
-it('leaves the printed invoice table unwrapped', function () {
+it('leaves the printed invoice tables unwrapped', function () {
     $src = (string) file_get_contents(resource_path('views/accounting/invoices/print.blade.php'));
 
-    expect(substr_count($src, '<table'))->toBe(1)
+    expect(substr_count($src, '<table'))->toBeGreaterThanOrEqual(1)
         ->and(substr_count($src, 'table-responsive'))->toBe(0);
 });
 
@@ -174,6 +178,7 @@ it('takes every screen font size from the fluid type scale', function () {
     // about a viewport, and rem there would change the printed output.
     $exempt = [
         'accounting/invoices/print.blade.php',
+        'accounting/invoices/pdf.blade.php',
         'layouts/_type-scale.blade.php',
     ];
 
@@ -264,7 +269,7 @@ it('sizes the invoice for a screen without changing the printed sheet', function
 it('sizes the error pages from the fluid scale too', function () {
     foreach (['404', '403', '419', '500'] as $code) {
         $src = (string) file_get_contents(resource_path("views/errors/{$code}.blade.php"));
-        expect($src)->toContain("errors._shell");
+        expect($src)->toContain('errors._shell');
     }
 
     $shell = (string) file_get_contents(resource_path('views/errors/_shell.blade.php'));

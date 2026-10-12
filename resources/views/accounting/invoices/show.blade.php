@@ -7,7 +7,7 @@
             <div><h1 class="page-title">Invoice {{ $invoice->invoice_number }}</h1><p class="page-subtitle">Invoice details</p></div>
             <div class="header-actions">
                 <a href="{{ route('accounting.invoices.edit', $invoice) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
-                <a href="{{ route('accounting.invoices.print', $invoice) }}" class="btn btn-secondary" target="_blank"><i class="fas fa-print"></i> Print</a>
+                <a href="{{ route('accounting.invoices.print', $invoice) }}" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Print / PDF</a>
                 <a href="{{ route('accounting.invoices.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
             </div>
         </div>
