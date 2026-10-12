@@ -9,22 +9,17 @@ use Symfony\Component\HttpFoundation\Response;
 class DashboardAuth
 {
     /**
-     * Handle an incoming request.
+     * Ensure the request is authenticated before reaching the dashboard.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * The "auth" middleware already covers this, but this guard is kept so the
+     * redirect target and flash message stay under the application's control.
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // if (!auth()->check()) {
-        //     return redirect()->route('login')->with('error', 'You must be logged in to access the dashboard.');
-        // }
-        if(!auth()->check()) {
+        if (! auth()->check()) {
             return redirect()->route('login')->with('error', 'You must be logged in to access the dashboard.');
         }
-        // var_dump(auth()->check());
 
-        // echo "bikram dhami ji ";
-        // echo ["user"=>auth()->user()];
         return $next($request);
     }
 }

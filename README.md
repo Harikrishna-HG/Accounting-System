@@ -87,9 +87,13 @@ vendor/bin/pint        # format PHP code
 Authentication is handled by Laravel's session guard. On top of that there are two
 middleware layers:
 
-- `role:super-admin,admin` gates the whole `/accounting` area.
+- `permission:dashboard.view` gates entry to the `/accounting` area; each module
+  inside it is gated by its own permission (`products.manage`, `invoices.manage`, …).
 - `permission:users.manage` and `permission:roles.manage` gate user and role
-  administration.
+  administration, and `permission:audit.view` gates the audit log.
+
+Signed-in users can reset their own password through the "Forgot Password?" link.
+Accounts are still only created by an administrator.
 
 Permissions available for assignment:
 

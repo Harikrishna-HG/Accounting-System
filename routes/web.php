@@ -27,7 +27,9 @@ Route::middleware(['auth', 'permission:audit.view'])->group(function () {
 });
 
 Route::match(['get', 'post'], '/login', [UserAuthController::class, 'login'])->name('login');
-Route::get('/forgot-password', [UserAuthController::class, 'forgot_password'])->name('forgot-password');
+Route::match(['get', 'post'], '/forgot-password', [UserAuthController::class, 'forgot_password'])->name('forgot-password');
+Route::get('/reset-password/{token}', [UserAuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [UserAuthController::class, 'resetPassword'])->name('password.update');
 Route::get('logout', [UserAuthController::class, 'logout'])->name('logout');
 
 // Accounts are created by an administrator through the users panel, which assigns

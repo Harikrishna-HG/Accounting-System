@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -95,9 +97,75 @@ class UserAuthController extends Controller
         ]);
     }
 
-    public function forgot_password()
+    /**
+     * Show the reset-link request form and send the link when it is submitted.
+     *
+     * The response is deliberately identical whether or not the email belongs
+     * to an account, so the endpoint cannot be used to enumerate users.
+     */
+    public function forgot_password(Request $request)
     {
-        return view('auth.forgot_password');
+        if (! $request->isMethod('post')) {
+            return view('auth.forgot_password');
+        }
+
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        // Reply identically for a known and an unknown address so the endpoint
+        // cannot be used to enumerate registered users. Throttling is the only
+        // outcome that warrants a distinct message.
+        if ($status === Password::RESET_THROTTLED) {
+            return back()->withInput()->with('error', __($status));
+        }
+
+        return redirect()->route('login')->with('success', __('passwords.sent'));
+    }
+
+    /**
+     * Show the form where a user sets a new password from a reset token.
+     */
+    public function showResetForm(Request $request, string $token)
+    {
+        return view('auth.reset_password', [
+            'token' => $token,
+            'email' => $request->query('email'),
+        ]);
+    }
+
+    /**
+     * Consume the reset token and store the new password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                // The password attribute is cast to "hashed", so assigning the
+                // plain value here stores the hash exactly once.
+                $user->forceFill([
+                    'password' => $password,
+                    'remember_token' => Str::random(60),
+                ])->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('login')->with('success', __($status));
+        }
+
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => __($status)]);
     }
 
     private function throttleKey(Request $request): string
