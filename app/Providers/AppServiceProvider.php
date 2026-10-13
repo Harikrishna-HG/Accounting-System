@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Product;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
         // each handler twice and writes two audit rows per authentication event.
 
         View::composer('components.dashboard.sidebar', function ($view) {
-            $view->with('productCount', Product::count());
+            $view->with('productCount', Cache::remember('products.count', 60, fn () => Product::count()));
         });
     }
 }

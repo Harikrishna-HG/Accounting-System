@@ -141,7 +141,7 @@
         <div class="notes" style="margin-top: 14px;"><span class="bold">Notes:</span> {{ $invoice->notes }}</div>
     @endif
 
-    <div class="footer">This is a computer-generated invoice. Thank you for your business!</div>
+    <div class="footer">This is a Harikrishna-generated invoice. Thank you for your business!</div>
 
 </body>
 </html>

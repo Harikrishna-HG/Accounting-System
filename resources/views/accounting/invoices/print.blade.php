@@ -108,5 +108,5 @@ table{display:block;overflow-x:auto;white-space:nowrap}
     </tbody>
 </table>
 @if($invoice->notes)<div class="notes"><strong>Notes:</strong> {{ $invoice->notes }}</div>@endif
-<div class="footer">This is a computer-generated invoice. Thank you for your business!</div>
+<div class="footer">This is a Harikrishna-generated invoice. Thank you for your business!</div>
 </body></html>

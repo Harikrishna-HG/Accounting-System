@@ -25,7 +25,6 @@
                 <h3>Rs. {{ number_format($totalRevenue, 2) }}</h3>
                 <p>Total Revenue</p>
             </div>
-            <div class="stat-change up"><i class="fas fa-arrow-up"></i> Revenue</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background: #dc3545;">
@@ -35,7 +34,6 @@
                 <h3>Rs. {{ number_format($totalDue, 2) }}</h3>
                 <p>Total Due</p>
             </div>
-            <div class="stat-change" style="color:#dc3545;"><i class="fas fa-arrow-down"></i> Pending</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background: #ffc107;">
@@ -45,7 +43,6 @@
                 <h3>Rs. {{ number_format($totalExpenses, 2) }}</h3>
                 <p>Total Expenses</p>
             </div>
-            <div class="stat-change"><i class="fas fa-clock"></i> Spent</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background: #0d6efd;">
@@ -55,7 +52,6 @@
                 <h3>{{ $totalProducts }}</h3>
                 <p>Products</p>
             </div>
-            <div class="stat-change"><i class="fas fa-box"></i> Inventory</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background: #6f42c1;">

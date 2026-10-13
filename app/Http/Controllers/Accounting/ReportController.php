@@ -30,15 +30,20 @@ class ReportController extends Controller
 
         $netProfit = $revenue - $expenses;
 
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        $monthExpr = $driver === 'sqlite' ? "strftime('%Y-%m', invoice_date)" : "DATE_FORMAT(invoice_date, '%Y-%m')";
+
         $revenueByMonth = Invoice::where('status', 'paid')
             ->whereBetween('invoice_date', [$from, $to])
-            ->selectRaw("DATE_FORMAT(invoice_date, '%Y-%m') as month, SUM(total) as total")
+            ->selectRaw("$monthExpr as month, SUM(total) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month');
 
+        $expenseMonthExpr = $driver === 'sqlite' ? "strftime('%Y-%m', expense_date)" : "DATE_FORMAT(expense_date, '%Y-%m')";
+
         $expensesByMonth = Expense::whereBetween('expense_date', [$from, $to])
-            ->selectRaw("DATE_FORMAT(expense_date, '%Y-%m') as month, SUM(amount) as total")
+            ->selectRaw("$expenseMonthExpr as month, SUM(amount) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month');

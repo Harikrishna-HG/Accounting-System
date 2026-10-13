@@ -43,7 +43,16 @@ class User extends Authenticatable
 
     public function hasPermission($permissionSlug)
     {
-        return $this->role && $this->role->hasPermission($permissionSlug);
+        $role = $this->role;
+        if (! $role) {
+            return false;
+        }
+
+        if ($role->relationLoaded('permissions')) {
+            $role->loadMissing('permissions');
+        }
+
+        return $role->hasPermission($permissionSlug);
     }
 
     public function isSuperAdmin()
