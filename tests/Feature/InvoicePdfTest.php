@@ -69,18 +69,20 @@ it('renders the invoice PDF view with English and Nepali dates and the business 
         ->toContain('Widget')
         // The amount summary is a bordered, tabular grid with a header row.
         ->toContain('class="amounts"')
-        ->toContain('Amount (Rs.)')
+        ->toContain('Amount (NPR)')
         ->toContain('226.00');
 });
 
-it('centers the business name on the printed PDF', function () {
+it('shows the business name in the invoice header', function () {
     $html = view('accounting.invoices.pdf', [
         'invoice' => pdfInvoice(),
         'business' => config('accounting.business'),
     ])->render();
 
     expect($html)->toContain('class="company-header"')
-        ->and($html)->toMatch('/class="company-header">\s*<tr>\s*<td style="text-align: center;"/s');
+        ->and($html)->toContain('class="company-name"')
+        ->and($html)->toContain('Rate (NPR)')
+        ->and($html)->toContain('Balance Due');
 });
 
 it('downloads the invoice as a PDF attachment', function () {

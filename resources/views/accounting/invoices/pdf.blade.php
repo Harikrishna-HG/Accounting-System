@@ -1,81 +1,96 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Invoice {{ $invoice->invoice_number }}</title>
-<style>
-    @page { margin: 30px 34px; }
-    * { box-sizing: border-box; }
-    body { font-family: mukta; font-size: 12px; color: #333333; line-height: 1.45; }
-    table { width: 100%; border-collapse: collapse; }
-    .accent { color: #CD2737; }
-    .muted { color: #6c757d; }
-    .right { text-align: right; }
-    .center { text-align: center; }
-    .bold { font-weight: bold; }
-    .company-header { text-align: center; }
-    .company-name { font-size: 22px; font-weight: bold; }
-    .company-line { font-size: 11px; color: #555555; }
-    .invoice-title { font-size: 24px; font-weight: bold; letter-spacing: 3px; color: #1a1a2e; }
-    .rule { border-bottom: 2px solid #CD2737; margin: 12px 0 16px; }
-    .section-label { font-size: 10px; font-weight: bold; letter-spacing: 1px; color: #6c757d; text-transform: uppercase; }
-    .items th { background: #f8f9fa; padding: 8px 10px; text-align: left; font-size: 11px; color: #6c757d; text-transform: uppercase; border-bottom: 2px solid #CD2737; }
-    .items td { padding: 8px 10px; border-bottom: 1px solid #eeeeee; font-size: 12px; }
-    .amounts th { background: #f8f9fa; border: 1px solid #d9d9d9; padding: 6px 10px; text-align: left; font-size: 11px; color: #6c757d; text-transform: uppercase; }
-    .amounts td { border: 1px solid #d9d9d9; padding: 6px 10px; font-size: 12px; }
-    .amounts .grand td { background: #fdf2f4; font-weight: bold; color: #CD2737; font-size: 13px; }
-    .amounts .due td { font-weight: bold; }
-    .notes { background: #f8f9fa; padding: 10px 12px; font-size: 11px; color: #555555; }
-    .footer { margin-top: 26px; border-top: 1px solid #eeeeee; padding-top: 12px; text-align: center; font-size: 10px; color: #999999; }
-</style>
+    <meta charset="UTF-8">
+    <title>Invoice {{ $invoice->invoice_number }}</title>
+    <style>
+        @page { margin: 30px 34px; }
+        * { box-sizing: border-box; }
+        body { font-family: mukta; font-size: 11px; color: #263238; line-height: 1.45; }
+        table { width: 100%; border-collapse: collapse; }
+        .accent { color: #b42332; }
+        .muted { color: #667085; }
+        .right { text-align: right; }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        .company-header { border-top: 4px solid #b42332; }
+        .company-header td { padding: 13px 0 12px; text-align: center; }
+        .company-name { font-size: 21px; font-weight: bold; color: #182230; }
+        .company-line { font-size: 10px; color: #667085; }
+        .rule { border-bottom: 1px solid #d0d5dd; margin: 0 0 17px; }
+        .invoice-title { font-size: 23px; font-weight: bold; letter-spacing: 2px; color: #182230; }
+        .invoice-number { font-size: 12px; font-weight: bold; color: #b42332; }
+        .section-label { margin-bottom: 5px; font-size: 9px; font-weight: bold; letter-spacing: 1px; color: #667085; text-transform: uppercase; }
+        .details td { vertical-align: top; }
+        .bill-to { padding: 10px 12px; border: 1px solid #eaecf0; }
+        .meta { padding: 0 0 0 12px; }
+        .meta-row { padding: 2px 0; }
+        .meta-label { display: inline-block; width: 88px; color: #667085; }
+        .status { margin-top: 6px; padding: 3px 8px; display: inline-block; border: 1px solid #d0d5dd; font-size: 9px; font-weight: bold; color: #344054; }
+        .items { margin-top: 18px; }
+        .items th { padding: 8px 9px; background: #f2f4f7; border-top: 1px solid #d0d5dd; border-bottom: 1px solid #d0d5dd; text-align: left; font-size: 9px; font-weight: bold; color: #475467; text-transform: uppercase; }
+        .items td { padding: 8px 9px; border-bottom: 1px solid #eaecf0; font-size: 11px; }
+        .items tr { page-break-inside: avoid; }
+        .amounts th { padding: 6px 9px; background: #f2f4f7; border: 1px solid #d0d5dd; text-align: left; font-size: 9px; color: #475467; text-transform: uppercase; }
+        .amounts td { padding: 6px 9px; border: 1px solid #eaecf0; font-size: 10px; }
+        .amounts .grand td { background: #fbf1f2; border-color: #e8c6ca; font-size: 12px; font-weight: bold; color: #9d1c2a; }
+        .amounts .due td { font-weight: bold; }
+        .notes { margin-top: 15px; padding: 9px 11px; border-left: 3px solid #b42332; background: #f8fafc; font-size: 10px; color: #475467; }
+        .signatures { margin-top: 35px; }
+        .signature-cell { width: 50%; padding-top: 24px; }
+        .signature-line { width: 160px; border-top: 1px solid #98a2b3; padding-top: 5px; color: #667085; font-size: 9px; }
+        .footer { margin-top: 24px; border-top: 1px solid #eaecf0; padding-top: 9px; text-align: center; font-size: 9px; color: #667085; }
+    </style>
 </head>
 <body>
 
     <table class="company-header">
         <tr>
-            <td style="text-align: center;">
-                <div class="company-name accent">{{ $business['name'] }}</div>
+            <td>
+                <div class="company-name">{{ $business['name'] }}</div>
                 @if($business['address'])<div class="company-line">{{ $business['address'] }}</div>@endif
                 @if($business['phone'])<div class="company-line">Phone: {{ $business['phone'] }}</div>@endif
                 @if($business['email'])<div class="company-line">Email: {{ $business['email'] }}</div>@endif
-                @if($business['pan'])<div class="company-line">PAN: {{ $business['pan'] }}</div>@endif
+                @if($business['pan'])<div class="company-line">PAN No.: {{ $business['pan'] }}</div>@endif
             </td>
         </tr>
     </table>
 
     <div class="rule"></div>
 
-    <table>
+    <table class="details">
         <tr>
-            <td style="width: 60%; vertical-align: top;">
-                <div class="section-label">Bill To</div>
-                <div class="bold" style="font-size: 13px;">{{ $invoice->client_name }}</div>
-                @if($invoice->client_phone)<div class="muted">{{ $invoice->client_phone }}</div>@endif
-                @if($invoice->client_address)<div class="muted">{{ $invoice->client_address }}</div>@endif
-                @if($invoice->client_pan)<div class="muted">PAN: {{ $invoice->client_pan }}</div>@endif
+            <td style="width: 55%;">
+                <div class="bill-to">
+                    <div class="section-label">Bill To</div>
+                    <div class="bold" style="font-size: 13px;">{{ $invoice->client_name }}</div>
+                    @if($invoice->client_phone)<div class="muted">Phone: {{ $invoice->client_phone }}</div>@endif
+                    @if($invoice->client_address)<div class="muted">{{ $invoice->client_address }}</div>@endif
+                    @if($invoice->client_pan)<div class="muted">PAN / VAT No.: {{ $invoice->client_pan }}</div>@endif
+                </div>
             </td>
-            <td style="width: 40%; vertical-align: top;" class="right">
+            <td style="width: 45%;" class="right meta">
                 <div class="invoice-title">INVOICE</div>
-                <div class="bold">{{ $invoice->invoice_number }}</div>
-                <div class="muted">Date: {{ $invoice->invoice_date->format('Y-m-d') }}</div>
-                <div class="muted">मिति: {{ \App\Support\NepaliDate::format($invoice->invoice_date) }}</div>
+                <div class="invoice-number">{{ $invoice->invoice_number }}</div>
+                <div class="meta-row"><span class="meta-label">Date (AD)</span>{{ $invoice->invoice_date->format('Y-m-d') }}</div>
+                <div class="meta-row"><span class="meta-label">मिति (BS)</span>{{ \App\Support\NepaliDate::format($invoice->invoice_date) }}</div>
                 @if($invoice->due_date)
-                    <div class="muted">Due: {{ $invoice->due_date->format('Y-m-d') }}</div>
-                    <div class="muted">बुझाउने मिति: {{ \App\Support\NepaliDate::format($invoice->due_date) }}</div>
+                    <div class="meta-row"><span class="meta-label">Due (AD)</span>{{ $invoice->due_date->format('Y-m-d') }}</div>
+                    <div class="meta-row"><span class="meta-label">बुझाउने मिति</span>{{ \App\Support\NepaliDate::format($invoice->due_date) }}</div>
                 @endif
-                <div class="bold">Status: {{ strtoupper($invoice->status) }}</div>
+                <div class="status">{{ strtoupper($invoice->status) }}</div>
             </td>
         </tr>
     </table>
 
-    <table class="items" style="margin-top: 16px;">
+    <table class="items">
         <thead>
             <tr>
                 <th style="width: 6%;">#</th>
-                <th>Item</th>
+                <th>Description</th>
                 <th class="center" style="width: 12%;">Qty</th>
-                <th class="right" style="width: 20%;">Price</th>
-                <th class="right" style="width: 22%;">Total</th>
+                <th class="right" style="width: 20%;">Rate (NPR)</th>
+                <th class="right" style="width: 22%;">Amount (NPR)</th>
             </tr>
         </thead>
         <tbody>
@@ -91,15 +106,20 @@
         </tbody>
     </table>
 
-    <table style="margin-top: 12px;">
+    <table style="margin-top: 14px;">
         <tr>
-            <td style="width: 52%;"></td>
+            <td style="width: 52%; vertical-align: top;">
+                @if($invoice->payment_method)
+                    <div class="section-label">Payment Method</div>
+                    <div>{{ ucfirst($invoice->payment_method) }}</div>
+                @endif
+            </td>
             <td style="width: 48%; vertical-align: top;">
                 <table class="amounts">
                     <thead>
                         <tr>
                             <th>Description</th>
-                            <th class="right">Amount (Rs.)</th>
+                            <th class="right">Amount (NPR)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -121,15 +141,15 @@
                         @endif
                         <tr class="grand">
                             <td>Total</td>
-                            <td class="right">{{ number_format($invoice->total, 2) }}</td>
+                            <td class="right">Rs. {{ number_format($invoice->total, 2) }}</td>
                         </tr>
                         <tr>
                             <td>Paid</td>
                             <td class="right">{{ number_format($invoice->paid_amount, 2) }}</td>
                         </tr>
                         <tr class="due">
-                            <td>Due</td>
-                            <td class="right">{{ number_format($invoice->due_amount, 2) }}</td>
+                            <td>Balance Due</td>
+                            <td class="right">Rs. {{ number_format($invoice->due_amount, 2) }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -138,10 +158,17 @@
     </table>
 
     @if($invoice->notes)
-        <div class="notes" style="margin-top: 14px;"><span class="bold">Notes:</span> {{ $invoice->notes }}</div>
+        <div class="notes"><span class="bold">Notes:</span> {{ $invoice->notes }}</div>
     @endif
 
-    <div class="footer">This is a Harikrishna-generated invoice. Thank you for your business!</div>
+    <table class="signatures">
+        <tr>
+            <td class="signature-cell"><div class="signature-line">Customer's Signature</div></td>
+            <td class="signature-cell"><div class="signature-line right" style="margin-left: auto;">For {{ $business['name'] }} - Authorized Signature</div></td>
+        </tr>
+    </table>
+
+    <div class="footer">Thank you for your business. This invoice is issued in Nepalese Rupees (NPR).</div>
 
 </body>
 </html>
